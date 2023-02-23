@@ -1,0 +1,8 @@
+{
+  "requestPath": "/verify",
+  "method": "get",
+  "query": {
+    "code": "30003b67-3f87-46a9-b0bc-7c39f847e1be",
+    "id": "0a1540e3-e973-4001-88ba-a47dbd9577c5"
+  }
+}

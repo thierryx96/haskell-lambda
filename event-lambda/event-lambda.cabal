@@ -1,0 +1,187 @@
+cabal-version: 1.12
+
+-- This file has been generated from package.yaml by hpack version 0.33.0.
+--
+-- see: https://github.com/sol/hpack
+--
+-- hash: a0a4873d75f3b1b9d04e79f04dd33a5261faf594b7d7371a5649da5cb7d7db13
+
+name:           event-lambda
+version:        0.1.0
+description:    Please see the README on GitHub at <https://github.com/githubuser/event-lambda#readme>
+homepage:       https://github.com/githubuser/event-lambda#readme
+bug-reports:    https://github.com/githubuser/event-lambda/issues
+author:         Author name here
+maintainer:     example@example.com
+copyright:      2019 Author name here
+license:        BSD3
+license-file:   LICENSE
+build-type:     Simple
+extra-source-files:
+    README.md
+    ChangeLog.md
+
+source-repository head
+  type: git
+  location: https://github.com/githubuser/event-lambda
+
+library
+  exposed-modules:
+      Language.Processor
+      Lib.AWS.Emailing
+      Lib.AWS.Environment
+      Lib.AWS.Events
+      Lib.AWS.Publisher
+      Lib.AWS.Types
+      Lib.Utils
+      Notification.Messages
+      Verification.Messages
+      Verification.Storage
+      Verification.Types
+  other-modules:
+      Paths_event_lambda
+  hs-source-dirs:
+      src
+  default-extensions: GADTs DeriveGeneric FlexibleContexts OverloadedStrings RecordWildCards NamedFieldPuns DisambiguateRecordFields GeneralizedNewtypeDeriving QuasiQuotes DuplicateRecordFields
+  build-depends:
+      aeson
+    , amazonka
+    , amazonka-dynamodb
+    , amazonka-ses
+    , amazonka-sns
+    , base >=4.7 && <5
+    , bytestring
+    , glider-nlp
+    , lens
+    , mtl
+    , regex-compat
+    , resourcet
+    , serverless-haskell
+    , text
+    , time
+    , unordered-containers
+    , utf8-string
+    , uuid
+  default-language: Haskell2010
+
+executable notification-handler-exe
+  main-is: Main.hs
+  other-modules:
+      Paths_event_lambda
+  hs-source-dirs:
+      Handlers/NotificationHandler
+  default-extensions: GADTs DeriveGeneric FlexibleContexts OverloadedStrings RecordWildCards NamedFieldPuns DisambiguateRecordFields GeneralizedNewtypeDeriving QuasiQuotes
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+      aeson
+    , amazonka
+    , amazonka-dynamodb
+    , amazonka-ses
+    , amazonka-sns
+    , base >=4.7 && <5
+    , bytestring
+    , event-lambda
+    , glider-nlp
+    , lens
+    , mtl
+    , regex-compat
+    , resourcet
+    , serverless-haskell
+    , text
+    , time
+    , unordered-containers
+    , utf8-string
+    , uuid
+  default-language: Haskell2010
+
+executable verification-handler-exe
+  main-is: Main.hs
+  other-modules:
+      Paths_event_lambda
+  hs-source-dirs:
+      Handlers/VerificationHandler
+  default-extensions: GADTs DeriveGeneric FlexibleContexts OverloadedStrings RecordWildCards NamedFieldPuns DisambiguateRecordFields GeneralizedNewtypeDeriving QuasiQuotes
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+      aeson
+    , amazonka
+    , amazonka-dynamodb
+    , amazonka-ses
+    , amazonka-sns
+    , base >=4.7 && <5
+    , bytestring
+    , event-lambda
+    , glider-nlp
+    , http-conduit
+    , lens
+    , mtl
+    , regex-compat
+    , resourcet
+    , serverless-haskell
+    , split
+    , text
+    , time
+    , unordered-containers
+    , utf8-string
+    , uuid
+  default-language: Haskell2010
+
+executable verification-http-handler-exe
+  main-is: Main.hs
+  other-modules:
+      Paths_event_lambda
+  hs-source-dirs:
+      Handlers/HttpHandler
+  default-extensions: GADTs DeriveGeneric FlexibleContexts OverloadedStrings RecordWildCards NamedFieldPuns DisambiguateRecordFields GeneralizedNewtypeDeriving QuasiQuotes
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+      aeson
+    , amazonka
+    , amazonka-dynamodb
+    , amazonka-ses
+    , amazonka-sns
+    , base >=4.7 && <5
+    , bytestring
+    , event-lambda
+    , glider-nlp
+    , lens
+    , mtl
+    , regex-compat
+    , resourcet
+    , serverless-haskell
+    , text
+    , time
+    , unordered-containers
+    , utf8-string
+    , uuid
+  default-language: Haskell2010
+
+test-suite event-lambda-test
+  type: exitcode-stdio-1.0
+  main-is: Spec.hs
+  other-modules:
+      Paths_event_lambda
+  hs-source-dirs:
+      test
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+      aeson
+    , amazonka
+    , amazonka-dynamodb
+    , amazonka-ses
+    , amazonka-sns
+    , base >=4.7 && <5
+    , bytestring
+    , event-lambda
+    , glider-nlp
+    , lens
+    , mtl
+    , regex-compat
+    , resourcet
+    , serverless-haskell
+    , text
+    , time
+    , unordered-containers
+    , utf8-string
+    , uuid
+  default-language: Haskell2010

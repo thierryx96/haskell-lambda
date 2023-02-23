@@ -1,0 +1,143 @@
+name:                event-lambda
+version:             0.1.0
+github:              "githubuser/event-lambda"
+license:             BSD3
+author:              "Author name here"
+maintainer:          "example@example.com"
+copyright:           "2019 Author name here"
+
+extra-source-files:
+- README.md
+- ChangeLog.md
+
+# Metadata used when publishing your package
+# synopsis:            Short description of your package
+# category:            Web
+
+# To avoid duplicated efforts in documentation and dealing with the
+# complications of embedding Haddock markup inside cabal files, it is
+# common to point users to the README.md file.
+description:         Please see the README on GitHub at <https://github.com/githubuser/event-lambda#readme>
+
+dependencies:
+- base >= 4.7 && < 5
+- serverless-haskell
+- aeson
+- uuid
+- bytestring
+- utf8-string
+- lens
+- resourcet
+- text
+- unordered-containers
+- mtl
+- amazonka
+- amazonka-ses
+- amazonka-sns
+- amazonka-dynamodb
+- time
+- regex-compat
+- glider-nlp
+
+library:
+  source-dirs: src
+  default-extensions:
+    - GADTs
+    - DeriveGeneric
+    - FlexibleContexts
+    - OverloadedStrings
+    - RecordWildCards 
+    - NamedFieldPuns 
+    - DisambiguateRecordFields 
+    - GeneralizedNewtypeDeriving 
+    - QuasiQuotes 
+    - DuplicateRecordFields
+
+executables:
+  verification-handler-exe:
+    main:                Main.hs
+    source-dirs:         Handlers/VerificationHandler
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    dependencies:
+    - event-lambda
+    - amazonka-ses
+    - amazonka-sns
+    - amazonka-dynamodb
+    - http-conduit
+    - glider-nlp
+    - split
+    default-extensions:
+    - GADTs
+    - DeriveGeneric
+    - FlexibleContexts
+    - OverloadedStrings
+    - RecordWildCards 
+    - NamedFieldPuns 
+    - DisambiguateRecordFields 
+    - GeneralizedNewtypeDeriving 
+    - QuasiQuotes 
+
+  verification-http-handler-exe:
+      main:                Main.hs
+      source-dirs:         Handlers/HttpHandler
+      ghc-options:
+      - -threaded
+      - -rtsopts
+      - -with-rtsopts=-N
+      dependencies:
+      - event-lambda
+      - amazonka-ses
+      - amazonka-sns
+      - amazonka-dynamodb
+      default-extensions:
+      - GADTs
+      - DeriveGeneric
+      - FlexibleContexts
+      - OverloadedStrings
+      - RecordWildCards 
+      - NamedFieldPuns 
+      - DisambiguateRecordFields 
+      - GeneralizedNewtypeDeriving 
+      - QuasiQuotes     
+
+  notification-handler-exe:
+      main:                Main.hs
+      source-dirs:         Handlers/NotificationHandler
+      ghc-options:
+      - -threaded
+      - -rtsopts
+      - -with-rtsopts=-N
+      dependencies:
+      - event-lambda
+      - amazonka-ses
+      - amazonka-sns
+      - amazonka-dynamodb
+      default-extensions:
+      - GADTs
+      - DeriveGeneric
+      - FlexibleContexts
+      - OverloadedStrings
+      - RecordWildCards 
+      - NamedFieldPuns 
+      - DisambiguateRecordFields 
+      - GeneralizedNewtypeDeriving 
+      - QuasiQuotes 
+
+tests:
+  event-lambda-test:
+    main:                Spec.hs
+    source-dirs:         test
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    dependencies:
+    - event-lambda
+ 
+
+
+
+

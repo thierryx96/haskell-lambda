@@ -1,0 +1,208 @@
+stages:
+  - build
+  - deploy:pre
+  - test:unit
+  - test:int
+  - deploy:dev
+  - deploy:prod
+
+default:
+  image: node:14
+  before_script:
+    - export PATH="/root/.local/bin:$PATH"      
+    - export PATH="/ubuntu/.local/bin:$PATH"    
+    - export PATH="/tools/bin:$PATH"    
+    - export PATH="$HOME/.local/bin:$PATH"  
+    - export PATH="/home/ubuntu/.local/bin/:$PATH"
+    - export PATH="./../../infrastructure/gitlab/:$PATH"
+    - export PATH="/usr/local/bin/aws/:$PATH"
+
+  cache:
+    paths:
+      - "tools"    
+      - "backend/node_modules"
+      - "backend/apps/*/node_modules"
+      - "backend/libs/*/node_modules"
+      - "backend/apps/*/.stack-work"
+      - "aws/"
+      - "/usr/local/bin/aws"
+      - "/usr/local/lib/aws"
+      - .stack-work/
+      - .stack-root/
+      - awscliv2.zip
+
+### VERIFICATION SERVICES
+
+deploy-verification-dev:
+  stage: deploy:dev
+  image: docker
+  variables:
+    DOCKER_TLS_CERTDIR: ""
+    DOCKER_HOST: tcp://docker:2375/
+    DOCKER_DRIVER: overlay2
+    STACK_ROOT: "${CI_PROJECT_DIR}/.stack"
+    STACK_OPTS: "--system-ghc"
+    GLIBC_VER: "2.31-r0"
+  services:
+    - docker:dind  
+  tags:
+    - dind
+    - compile
+  cache:
+    paths:
+      - "backend/apps/event-lambda/.stack-work"
+      - .stack
+      - .stack-work
+      - target      
+  script:
+    - docker info
+    - export PATH="$HOME/.local/bin:$PATH"  
+    - export PATH="/ubuntu/.local/bin:$PATH"      
+    - export PATH="/home/ubuntu/.local/bin/:$PATH"
+    - export PATH="./../../../infrastructure/gitlab/:$PATH"
+    - export PATH="/usr/local/bin/stack/:$PATH"
+    - apk update
+    - apk add --update --no-cache curl jq npm bash 
+    - apk add --update --no-cache curl py-pip
+    # AWS V2
+    - > 
+        apk --no-cache add binutils curl 
+        && curl -sL https://alpine-pkgs.sgerrand.com/sgerrand.rsa.pub -o /etc/apk/keys/sgerrand.rsa.pub 
+        && curl -sLO https://github.com/sgerrand/alpine-pkg-glibc/releases/download/$GLIBC_VER/glibc-$GLIBC_VER.apk 
+        && curl -sLO https://github.com/sgerrand/alpine-pkg-glibc/releases/download/$GLIBC_VER/glibc-bin-$GLIBC_VER.apk 
+        && apk add --no-cache glibc-$GLIBC_VER.apk glibc-bin-$GLIBC_VER.apk 
+        && curl -sL https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip -o awscliv2.zip 
+        && unzip -o awscliv2.zip 
+        && aws/install 
+        && rm glibc-$GLIBC_VER.apk 
+        && rm glibc-bin-$GLIBC_VER.apk 
+        && rm -rf /var/cache/apk/*
+        
+    - export PATH=$HOME/.local/bin:$PATH
+    - export PATH=/usr/local/bin/
+    - /usr/local/bin/aws --version
+    - aws --version
+    
+    # - curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+    # - unzip -qq -o awscliv2.zip -qq
+    # - ./aws/install
+    # - aws --version 
+    # - apk -Uuv add groff less
+    # - pip install --no-cache-dir  awscli
+    # - apk --purge -v del py-pip
+    # - rm /var/cache/apk/*
+    # - export PATH=$HOME/.local/bin:$PATH
+    # - aws --version 
+    
+    # Stack
+    - curl -sSL https://get.haskellstack.org/ | sh -s - -f
+    - stack --version
+
+    - cd backend/apps/event-lambda
+    - pwd 
+    - rm -rf ~/.stack
+    - stack clean --full
+    
+#    - ls /root/.stack/programs/x86_64-linux/stack-2.1.3
+    # - stack --stack-root ${STACK_ROOT} --verbose --docker --docker-image fpco/stack-build:lts-13.30 --no-nix ls dependencies
+    
+    - npm install serverless -g
+    - npm install
+    #- /root/.stack/programs/x86_64-linux/stack-2.1.3
+#    - stack --docker --docker-image fpco/stack-build:lts-13.30 --no-nix ls dependencies
+    # - docker -v 
+#    - export PATH=$PATH:$(pwd)/node_modules/serverless/bin
+    # - stack --docker --docker-image fpco/stack-build:lts-13.30 --no-nix ls dependencies
+    - ./../../../infrastructure/scripts/assume-sls-role-dev.sh serverless deploy --stage dev
+  environment:
+    name: dev
+  when: manual
+
+deploy-verification-prod:
+  stage: deploy:prod
+  image: docker
+  variables:
+    DOCKER_TLS_CERTDIR: ""
+    DOCKER_HOST: tcp://docker:2375/
+    DOCKER_DRIVER: overlay2
+    STACK_ROOT: "${CI_PROJECT_DIR}/.stack"
+    STACK_OPTS: "--system-ghc"
+    GLIBC_VER: "2.31-r0"
+    
+  services:
+    - docker:dind  
+    
+  tags:
+    - dind
+    - compile
+    
+  cache:
+    paths:
+      - "backend/apps/event-lambda/.stack-work"
+      - .stack
+      - .stack-work
+      - target      
+  script:
+      - docker info
+      - export PATH="$HOME/.local/bin:$PATH"  
+      - export PATH="/ubuntu/.local/bin:$PATH"      
+      - export PATH="/home/ubuntu/.local/bin/:$PATH"
+      - export PATH="./../../../infrastructure/gitlab/:$PATH"
+      - export PATH="/usr/local/bin/stack/:$PATH"
+      - apk update
+      - apk add --update --no-cache curl jq npm bash 
+      - apk add --update --no-cache curl py-pip
+      # AWS V2
+      - > 
+        apk --no-cache add binutils curl 
+        && curl -sL https://alpine-pkgs.sgerrand.com/sgerrand.rsa.pub -o /etc/apk/keys/sgerrand.rsa.pub 
+        && curl -sLO https://github.com/sgerrand/alpine-pkg-glibc/releases/download/$GLIBC_VER/glibc-$GLIBC_VER.apk 
+        && curl -sLO https://github.com/sgerrand/alpine-pkg-glibc/releases/download/$GLIBC_VER/glibc-bin-$GLIBC_VER.apk 
+        && apk add --no-cache glibc-$GLIBC_VER.apk glibc-bin-$GLIBC_VER.apk 
+        && curl -sL https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip -o awscliv2.zip 
+        && unzip -o awscliv2.zip 
+        && aws/install 
+        && rm glibc-$GLIBC_VER.apk 
+        && rm glibc-bin-$GLIBC_VER.apk 
+        && rm -rf /var/cache/apk/*
+      - export PATH=$HOME/.local/bin:$PATH
+      - export PATH=/usr/local/bin/
+      - /usr/local/bin/aws --version
+      - aws --version
+
+    #   - curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+    #   - unzip -qq -o awscliv2.zip
+    #   - ./aws/install
+
+    #   - apk -Uuv add groff less
+    #   - pip install --no-cache-dir awscli 
+    #   - apk --purge -v del py-pip
+    #   - rm /var/cache/apk/*
+      - export PATH=$HOME/.local/bin:$PATH
+      - aws --version 
+      
+      # Stack
+      - curl -sSL https://get.haskellstack.org/ | sh -s - -f
+      - stack --version
+
+      - cd backend/apps/event-lambda
+      - pwd 
+      - rm -rf ~/.stack
+      - stack clean --full
+      
+  #    - ls /root/.stack/programs/x86_64-linux/stack-2.1.3
+      # - stack --stack-root ${STACK_ROOT} --verbose --docker --docker-image fpco/stack-build:lts-13.30 --no-nix ls dependencies
+      
+      - npm install
+      #- /root/.stack/programs/x86_64-linux/stack-2.1.3
+  #    - stack --docker --docker-image fpco/stack-build:lts-13.30 --no-nix ls dependencies
+      # - docker -v 
+  #    - export PATH=$PATH:$(pwd)/node_modules/serverless/bin
+      # - stack --docker --docker-image fpco/stack-build:lts-13.30 --no-nix ls dependencies
+      - ./../../../infrastructure/scripts/assume-sls-role-prod.sh serverless deploy --stage prod
+
+  environment:
+    name: prod
+  when: manual    
+  
+  

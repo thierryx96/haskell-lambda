@@ -1,0 +1,201 @@
+service: service-verification
+
+provider:
+  region: ${self:custom.config.region}
+  name: aws
+  runtime: haskell
+  cfnRole: ${self:custom.config.roles.cfnDeployRole}
+  stage: ${opt:stage, 'dev'}
+  tracing:
+    apiGateway: ${self:custom.config.tracing}
+    lambda: ${self:custom.config.tracing}
+    
+  stackTags: 
+    project: kynd-platform
+    resource: service-verification
+    layer: service
+  environment:
+    EMAIL_ON: ${self:custom.config.email.enabled}
+    EMAIL_SENDER: ${self:custom.config.email.sender}
+    EMAIL_TEST_RECIPIENT: ${self:custom.config.email.testRecipient}
+    AWS_ACCOUNT_ID: ${self:custom.config.envAccount}
+    # AWS_ACCOUNT: '#{AWS::AccountId}'
+    API_ENDPOINT: !ImportValue ApiServiceEndpoint
+    DEBUG: ${opt:debug, 'False'}
+    WEBAPP_ENDPOINT: https://${self:custom.config.web.domain}
+    CENSORED_WORDS: ${self:custom.config.verification.censoredWords}
+    CENSORED_SENTENCES: ${self:custom.config.verification.censoredSentences}
+
+  apiGateway:
+    restApiId: !ImportValue ApiGatewayRestApiId
+    restApiRootResourceId: !ImportValue ApiGatewayRootResourceId
+
+  iamRoleStatements:
+  - Effect: Allow
+    Action:
+      - SQS:SendMessage
+      - SQS:GetQueueAttributes
+    Resource: 
+      - !ImportValue LambdaDeadletterQueueArn    
+  - Effect: Allow
+    Action:
+      - dynamodb:DeleteItem
+      - dynamodb:GetItem
+      - dynamodb:PutItem
+      - dynamodb:UpdateItem
+      - dynamodb:Query
+      - dynamodb:Scan      
+    Resource: !GetAtt VerificationDynamoDBTable.Arn
+  - Effect: Allow
+    Action:
+      - dynamodb:DeleteItem
+      - dynamodb:GetItem
+      - dynamodb:PutItem
+      - dynamodb:UpdateItem
+      - dynamodb:Query
+      - dynamodb:Scan      
+    Resource:
+      - { "Fn::Join": [ "/", [ 
+          { "Fn::GetAtt": ["VerificationDynamoDBTable", "Arn" ] }, "index", "VerificationIndexSourceId" 
+        ]]}
+
+  - Effect: 'Allow'
+    Action: 
+      - sns:Publish
+      - sns:Subscribe
+      - sns:Unsubscribe
+    Resource:
+      - arn:aws:sns:#{AWS::Region}:#{AWS::AccountId}:verification
+
+  - Effect: Allow
+    Action: 
+      - ses:SendTemplatedEmail
+    Resource: arn:aws:ses:#{AWS::Region}:#{AWS::AccountId}:identity/*
+
+custom:
+  verificationTopic: !ImportValue VerificationTopic
+  config: ${file(../../../config.${self:provider.stage}.yml)}
+  datadog: 
+    enabled: ${self:custom.config.datadog.enabled} 
+    forwarderArn: ${self:custom.config.datadog.forwarder} 
+    flushMetricsToLogs: true
+    apiKey: ${env:DATADOG_API_KEY}
+    addLayers: ${self:custom.config.datadog.enabled} 
+    enableDDTracing: false
+
+functions:
+  # notificationRelayHandler:
+  #   handler: event-lambda.notification-handler-exe
+    # events:
+    # - stream: 
+    #     type: dynamodb #arn:aws:dynamodb:#{AWS::Region}:#{AWS::AccountId}:table/Notification
+    #     arn: !ImportValue NotificationTableStreamArn
+  verificationRequestHandler:
+    handler: event-lambda.verification-handler-exe
+    # Here, mypackage is the Haskell package name and myfunc is the executable
+    # name as defined in the Cabal file. The handler field may be prefixed
+    # with a path of the form `dir1/.../dirn`, relative to `serverless.yml`,
+    # which points to the location where the Haskell package `mypackage` is
+    # defined. This prefix is not needed when the Stack project is defined at
+    # the same level as `serverless.yml`.
+    events:
+    - sns: 
+        arn: ${self:custom.verificationTopic} 
+        topicName: 'verification'
+        filterPolicy:
+          type: 
+            - EmailVerificationRequest
+            - ABNVerificationRequest
+            - TextVerificationRequest
+
+
+  verificationHttpHandler:
+    handler: event-lambda.verification-http-handler-exe
+    events:
+    - http:          
+        path: verify/
+        method: get
+        cors: true 
+        integration: lambda 
+        request:
+          parameters:
+            querystrings:
+              code: true
+              id: true
+        response:
+          statusCodes:
+            302:
+              pattern: ''
+              headers: 
+                Location: "integration.response.body"
+                
+
+         
+
+    # - http:
+    #     method: get
+    #     path: /verify
+    #     request:
+    #       parameters:
+    #         'method.request.querystring.fq': false
+    #         'method.request.querystring.pretty': false
+
+    #       template:
+    #         application/json: >
+    #           {
+    #             "id" : "$input.params('id')",
+    #             "code": "$input.params('code')"
+    #           }   
+
+    # S3 Doc Events    
+    # - s3:
+    #     bucket: ${self:custom.config.s3DocBucket}
+    #     event: s3:ObjectCreated:*
+    #     existing: true  
+
+plugins:
+  - serverless-haskell
+  # - serverless-offline
+  - serverless-cloudformation-sub-variables
+  - serverless-plugin-datadog
+
+package:
+  exclude:
+    - node_modules/**
+    - data/**
+    - __tests__/**
+
+resources:
+  Resources:
+    VerificationRequestHandlerLambdaFunction:
+      Type: "AWS::Lambda::Function"
+      Properties:
+        DeadLetterConfig:
+          TargetArn: !ImportValue LambdaDeadletterQueueArn
+
+    VerificationDynamoDBTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: Verification
+        PointInTimeRecoverySpecification:
+          PointInTimeRecoveryEnabled: true
+        AttributeDefinitions:
+          - AttributeName: correlationId
+            AttributeType: S
+          # - AttributeName: accountId
+          #   AttributeType: S
+          - AttributeName: sourceId
+            AttributeType: S            
+        GlobalSecondaryIndexes:
+          - IndexName: VerificationIndexSourceId
+            KeySchema:
+            - AttributeName: sourceId
+              KeyType: HASH
+            Projection:
+              ProjectionType: KEYS_ONLY
+        KeySchema:
+          - AttributeName: correlationId
+            KeyType: HASH          
+        BillingMode: PAY_PER_REQUEST
+
+   

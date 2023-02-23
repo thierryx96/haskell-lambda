@@ -1,0 +1,38 @@
+{
+  "Records": [
+    {
+      "eventVersion": "2.1",
+      "eventSource": "aws:s3",
+      "awsRegion": "us-east-1",
+      "eventTime": "2019-10-31T03:07:11.166Z",
+      "eventName": "ObjectCreated:Put",
+      "userIdentity": {
+        "principalId": "AWS:AROAQ2PDXTMU7RCRHZF6A:BackplaneAssumeRoleSession"
+      },
+      "requestParameters": {
+        "sourceIPAddress": "3.216.137.43"
+      },
+      "responseElements": {
+        "x-amz-request-id": "6F97804DADAD7DB5",
+        "x-amz-id-2": "iI9tGCPKBeIoiG6+gHTK8r3OWzYPYsFtosoaHwbsT1focrli2/sWcRxLqg7Ij5h7gMXZG9e1ZuI="
+      },
+      "s3": {
+        "s3SchemaVersion": "1.0",
+        "configurationId": "S3DocumentUpdated",
+        "bucket": {
+          "name": "kynd-dev-doc",
+          "ownerIdentity": {
+            "principalId": "A3G4Z8DM27XXP1"
+          },
+          "arn": "arn:aws:s3:::kynd-dev-doc"
+        },
+        "object": {
+          "key": "95ed786b-d086-4de0-a52d-6ca9b22f98ae/account/95ed786b-d086-4de0-a52d-6ca9b22f98ae/PoliceCheck/test_2.pdf",
+          "size": 535,
+          "eTag": "a7f129b258c266406514894048961632",
+          "sequencer": "005DBA4FDF1D5EBC84"
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,31 @@
+{
+  "name": "service-verification",
+  "version": "0.1.0",
+  "license": "UNLICENSED",  
+  "main": "index.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "deploy:dev": "./../../../infrastructure/scripts/assume-sls-role-dev.sh sls deploy --env dev --stage dev",
+    "deploy:prod": "./../../../infrastructure/scripts/assume-sls-role-prod.sh sls deploy --stage prod --region ap-southeast-2",
+    "invoke:dev:create-email": "./../../../infrastructure/scripts/assume-sls-role-dev.sh serverless invoke local -f verificationRequestHandler --path /home/th/dev/kynd-platform/backend/apps/event-lambda/test/sns_create_email.json  --debug True",
+    "test:verify-code": "./../../../infrastructure/scripts/assume-sls-role-dev.sh serverless invoke local -f verificationRequestHandler --path /home/th/dev/kynd-platform/backend/apps/event-lambda/test/http_verify_code.json  --env prod   --debug True",
+    "invoke:dev:verify-code": "./../../../infrastructure/scripts/assume-sls-role-dev.sh serverless invoke local -f verificationRequestHandler --path /home/th/dev/kynd-platform/backend/apps/event-lambda/test/http_verify_code.json  --env prod   --debug True",
+    "invoke:prod:create-email": "./../../../infrastructure/scripts/assume-sls-role-prod.sh serverless invoke local -f verificationRequestHandler --path /home/th/dev/kynd-platform/backend/apps/event-lambda/test/sns_create_email.json  --env prod --profile kynd-prod",
+    "invoke:abn-name:local": "./../../../infrastructure/scripts/assume-sls-role-dev.sh serverless invoke local -f verificationRequestHandler --path /home/th/dev/kynd-platform/backend/apps/event-lambda/test/sns_abn_name.json  --env dev --debug True",
+    "invoke:abn-ok:local": "./../../../infrastructure/scripts/assume-sls-role-dev.sh serverless invoke local -f verificationRequestHandler --path /home/th/dev/kynd-platform/backend/apps/event-lambda/test/sns_abn_ok.json  --env dev --debug True",
+    "invoke:abn-cancel:local": "./../../../infrastructure/scripts/assume-sls-role-dev.sh serverless invoke local -f verificationRequestHandler --path /home/th/dev/kynd-platform/backend/apps/event-lambda/test/sns_abn_cancel.json  --env dev --debug True",
+    "invoke:abn-suppress:local": "./../../../infrastructure/scripts/assume-sls-role-dev.sh serverless invoke local -f verificationRequestHandler --path /home/th/dev/kynd-platform/backend/apps/event-lambda/test/sns_abn_suppress.json  --env dev --debug True",
+    "invoke:abn-sole:local": "./../../../infrastructure/scripts/assume-sls-role-dev.sh serverless invoke local -f verificationRequestHandler --path /home/th/dev/kynd-platform/backend/apps/event-lambda/test/sns_abn_sole.json  --env dev --debug True",
+    "invoke:text-ok:local": "./../../../infrastructure/scripts/assume-sls-role-dev.sh serverless invoke local -f verificationRequestHandler --path /home/th/dev/kynd-platform/backend/apps/event-lambda/test/sns_text_ok.json  --env dev --debug True",
+    "invoke:text-censored:local": "./../../../infrastructure/scripts/assume-sls-role-dev.sh serverless invoke local -f verificationRequestHandler --path /home/th/dev/kynd-platform/backend/apps/event-lambda/test/sns_text_censored.json  --env dev --debug True"
+  },
+  "dependencies": {
+    "serverless-haskell": "^0.12.5",
+		"serverless-plugin-datadog": "^2.28.0"
+  },
+  "devDependencies": {
+    "serverless-cloudformation-sub-variables": "^0.2.1"
+  }
+}
